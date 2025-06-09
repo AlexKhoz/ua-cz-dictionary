@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ukrainian-Czech Dictionary</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --text-primary: #1D1D1F;
+            --text-secondary: #86868B;
+            --text-tertiary: #A0A0A5;
+            --bg-primary: #FFFFFF;
+            --border-color: #E5E5EA;
+            --radius-small: 4px;
+            --radius-medium: 8px;
+            --radius-large: 12px;
+            --shadow-light: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 6px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 0;
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        .logo .flag {
+            font-size: 24px;
+        }
+
+        .search-box {
+            flex: 1;
+            margin-left: 24px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-medium);
+            transition: var(--transition);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: var(--shadow-light);
+        }
+
+        nav.alphabet-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            position: sticky;
+            top: 80px; /* height of header */
+            background: var(--bg-primary);
+            z-index: 99;
+            transition: all 0.3s;
+        }
+
+        nav.alphabet-nav button {
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            border-radius: var(--radius-small);
+        }
+
+        nav.alphabet-nav button:hover {
+            background: rgba(0, 122, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        nav.alphabet-nav button.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        @media (max-width: 700px) {
+            nav.alphabet-nav {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100vh;
+                width: 32px;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: none;
+                margin: 0;
+                background: transparent;
+                box-shadow: none;
+                padding: 0;
+            }
+            nav.alphabet-nav button {
+                font-size: 0.75rem;
+                padding: 2px 0;
+                color: var(--text-tertiary);
+                background: none;
+                border: none;
+                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                text-align: center;
+                text-transform: lowercase;
+                margin: 0;
+            }
+            nav.alphabet-nav button.active {
+                color: var(--primary-color);
+                background: rgba(0, 122, 255, 0.08);
+                font-weight: 700;
+            }
+            .section-title {
+                font-size: 2rem;
+            }
+            header {
+                position: sticky;
+                top: 0;
+                z-index: 101;
+            }
+        }
+
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .word-entry {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-large);
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+
+        .word-entry:hover {
+            border-color: var(--text-tertiary);
+            box-shadow: var(--shadow-light);
+        }
+
+        .word-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .ukrainian-word {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .czech-translation {
+            font-size: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span>Словник</span>
+        </div>
+        <input type="text" class="search-box" placeholder="Пошук слів…" id="searchInput">
+    </header>
+
+    <nav class="alphabet-nav" id="alphabetNav"></nav>
+
+    <div id="dictionaryContent">
+        <div class="loading">Завантаження словника...</div>
+    </div>
+
+    <script>
+    let dictionaryData = {};
+    let currentData = {};
+
+    // Ukrainian alphabet order
+    const ukrAlphabet = [
+        'А','Б','В','Г','Ґ','Д','Е','Є','Ж','З','И','І','Ї','Й','К','Л','М','Н','О','П','Р','С','Т','У','Ф','Х','Ц','Ч','Ш','Щ','Ь','Ю','Я'
+    ];
+
+    // Parse CSV data from the uploaded file
+    function parseCSVData() {
+        fetch('dictionary..csv')
+            .then(response => response.text())
+            .then(csvData => {
+                const data = {};
+                Papa.parse(csvData, {
+                    header: false,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        results.data.forEach(row => {
+                            if (row.length < 2) return;
+                            const uk = row[0].replace(/^"|"$/g, '').trim();
+                            const cz = row[1].replace(/^"|"$/g, '').trim();
+                            if (uk && cz) {
+                                const letter = uk[0].toUpperCase();
+                                if (!data[letter]) data[letter] = [];
+                                data[letter].push({ ukrainian: uk, czech: cz });
+                            }
+                        });
+                        // Sort and initialize as before
+                        Object.keys(data).forEach(letter => {
+                            data[letter].sort((a, b) => a.ukrainian.localeCompare(b.ukrainian, 'uk'));
+                        });
+                        dictionaryData = data;
+                        currentData = data;
+                        generateAlphabetNav();
+                        generateDictionarySections();
+                        setupSearch();
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading dictionary data:', error);
+                document.getElementById('dictionaryContent').innerHTML =
+                    '<div class="no-results">Помилка завантаження словника</div>';
+            });
+    }
+
+    // Create word card element
+    function createWordEntry(word) {
+        const entry = document.createElement('div');
+        entry.className = 'word-entry';
+        entry.innerHTML = `
+            <div class="word-header">
+                <span class="ukrainian-word">${word.ukrainian}</span>
+            </div>
+            <div class="czech-translation">${word.czech}</div>
+        `;
+        return entry;
+    }
+
+    // Generate alphabet navigation
+    function generateAlphabetNav(data = dictionaryData) {
+        const nav = document.getElementById('alphabetNav');
+        nav.innerHTML = '';
+        const letters = Object.keys(data);
+        // Sort letters according to Ukrainian alphabet
+        const sortedLetters = ukrAlphabet.filter(l => letters.includes(l)).concat(
+            letters.filter(l => !ukrAlphabet.includes(l)).sort()
+        );
+        sortedLetters.forEach(letter => {
+            const btn = document.createElement('button');
+            btn.textContent = letter;
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                nav.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+                const section = document.getElementById(`section-${letter}`);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            nav.appendChild(btn);
+        });
+    }
+
+    // Generate dictionary sections and cards
+    function generateDictionarySections(data = dictionaryData) {
+        const container = document.getElementById('dictionaryContent');
+        container.innerHTML = '';
+        const letters = Object.keys(data);
+        // Sort letters according to Ukrainian alphabet
+        const sortedLetters = ukrAlphabet.filter(l => letters.includes(l)).concat(
+            letters.filter(l => !ukrAlphabet.includes(l)).sort()
+        );
+        if (sortedLetters.length === 0) {
+            container.innerHTML = '<div class="no-results">Результати не знайдено</div>';
+            return;
+        }
+        sortedLetters.forEach(letter => {
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.id = `section-${letter}`;
+            const title = document.createElement('h2');
+            title.className = 'section-title';
+            title.textContent = letter;
+            section.appendChild(title);
+            data[letter].forEach(word => {
+                section.appendChild(createWordEntry(word));
+            });
+            container.appendChild(section);
+        });
+    }
+
+    // Search functionality
+    function setupSearch() {
+        const input = document.getElementById('searchInput');
+        input.addEventListener('input', () => {
+            const query = input.value.toLowerCase().trim();
+            
+            if (!query) {
+                currentData = dictionaryData;
+                generateDictionarySections(currentData);
+                generateAlphabetNav(currentData);
+                return;
+            }
+            
+            const filtered = {};
+            Object.entries(dictionaryData).forEach(([letter, words]) => {
+                const matches = words.filter(w =>
+                    w.ukrainian.toLowerCase().includes(query) ||
+                    w.czech.toLowerCase().includes(query)
+                );
+                if (matches.length > 0) {
+                    filtered[letter] = matches;
+                }
+            });
+            
+            currentData = filtered;
+            generateDictionarySections(currentData);
+            generateAlphabetNav(currentData);
+        });
+    }
+
+    // Initialize app
+    function initializeDictionary() {
+        try {
+            dictionaryData = parseCSVData();
+            currentData = dictionaryData;
+            generateAlphabetNav();
+            generateDictionarySections();
+            setupSearch();
+        } catch (error) {
+            console.error('Error initializing dictionary:', error);
+            document.getElementById('dictionaryContent').innerHTML = 
+                '<div class="no-results">Помилка завантаження словника</div>';
+        }
+    }
+
+    // Call initializeDictionary when the page loads
+    initializeDictionary();
+    </script>
+</body>
+</html>
