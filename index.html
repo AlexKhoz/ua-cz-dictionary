@@ -329,9 +329,21 @@
                 if (section) {
                     const sectionTitle = section.querySelector('.section-title');
                     if (sectionTitle) {
-                        const headerOffset = 180; // Adjust this value based on your header height
+                        // Get the header and nav elements
+                        const header = document.querySelector('header');
+                        const nav = document.querySelector('.alphabet-nav');
+                        
+                        // Calculate dynamic offsets
+                        const headerHeight = header.offsetHeight;
+                        const navHeight = window.innerWidth <= 700 ? 0 : nav.offsetHeight; // Nav is fixed on mobile
+                        const buffer = 16; // Small buffer for better spacing
+                        
+                        // Calculate total offset
+                        const totalOffset = headerHeight + navHeight + buffer;
+                        
+                        // Get element position and scroll
                         const elementPosition = sectionTitle.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        const offsetPosition = elementPosition + window.pageYOffset - totalOffset;
 
                         window.scrollTo({
                             top: offsetPosition,
